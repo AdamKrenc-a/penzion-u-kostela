@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ece7df"/>
+      <stop offset="100%" stop-color="#d8cab8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <g fill="#7a5c3d" font-family="Inter, sans-serif" font-size="42" font-weight="600">
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">Penzion u kostela – foto</text>
+  </g>
+</svg>
