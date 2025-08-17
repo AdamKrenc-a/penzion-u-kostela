@@ -14,7 +14,7 @@
 
   // Get Google Sheets URL from localStorage or use default
   function getGoogleSheetsURL() {
-    return localStorage.getItem('google_sheets_url') || 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/pub?output=csv';
+    return localStorage.getItem('google_sheets_url') || 'https://docs.google.com/spreadsheets/d/1Xeh_j84ia4WRSVAYPzedI5mkmQ0aDVYo6HX64QdUsFU/export?format=csv&gid=0';
   }
 
   // Parse CSV data from Google Sheets
@@ -23,9 +23,31 @@
     const prices = {};
     
     lines.forEach(line => {
-      const [key, value] = line.split(',');
-      if (key && value && !isNaN(parseInt(value))) {
-        prices[key.trim()] = parseInt(value.trim());
+      const columns = line.split(',');
+      if (columns.length >= 2) {
+        const key = columns[0].trim();
+        const value = columns[1].trim();
+        
+        // Map specific keys to our pricing structure
+        if (key === '1 osoba' && value && !isNaN(parseInt(value))) {
+          prices.single1 = parseInt(value);
+        } else if (key === 'Dvoulůžkový pokoj' && value && !isNaN(parseInt(value))) {
+          prices.double1 = parseInt(value);
+        } else if (key === 'Třílůžkový pokoj' && value && !isNaN(parseInt(value))) {
+          prices.triple1 = parseInt(value);
+        } else if (key === 'single1' && value && !isNaN(parseInt(value))) {
+          prices.single1 = parseInt(value);
+        } else if (key === 'single2' && value && !isNaN(parseInt(value))) {
+          prices.single2 = parseInt(value);
+        } else if (key === 'double1' && value && !isNaN(parseInt(value))) {
+          prices.double1 = parseInt(value);
+        } else if (key === 'double2' && value && !isNaN(parseInt(value))) {
+          prices.double2 = parseInt(value);
+        } else if (key === 'triple1' && value && !isNaN(parseInt(value))) {
+          prices.triple1 = parseInt(value);
+        } else if (key === 'triple2' && value && !isNaN(parseInt(value))) {
+          prices.triple2 = parseInt(value);
+        }
       }
     });
     
