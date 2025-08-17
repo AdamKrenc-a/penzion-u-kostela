@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Penzion u Kostela | Správa cen</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .admin-panel {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .status.success { background: #d4edda; color: #155724; }
+      .status.error { background: #f8d7da; color: #721c24; }
+      .status.info { background: #d1ecf1; color: #0c5460; }
+      .price-input {
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+        align-items: center;
+      }
+      .price-input input {
+        width: 100px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .btn:hover { background: #0056b3; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <a href="index.html" class="brand" aria-label="Homepage">
+          <span class="brand-title">Penzion u Kostela</span>
+          <small>Litvínov</small>
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <div class="admin-panel">
+        <h1>🎛️ Správa cen - Google Sheets</h1>
+        
+        <div class="status info">
+          <strong>Instrukce:</strong>
+          <ol>
+            <li>Vytvořte Google Sheets podle <a href="GOOGLE_SHEETS_SETUP.md" target="_blank">instrukcí</a></li>
+            <li>Zkopírujte URL z publikovaného listu "API"</li>
+            <li>Vložte URL do pole níže</li>
+            <li>Klikněte "Testovat připojení"</li>
+          </ol>
+        </div>
+
+        <div class="price-input">
+          <label>Google Sheets URL:</label>
+          <input type="text" id="sheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="width: 400px;">
+          <button class="btn" onclick="testConnection()">Testovat připojení</button>
+        </div>
+
+        <div id="status"></div>
+
+        <div id="currentPrices" style="display: none;">
+          <h3>Aktuální ceny z Google Sheets:</h3>
+          <div class="price-input">
+            <label>1 osoba (1 noc):</label>
+            <input type="number" id="single1" readonly>
+            <span>Kč/noc</span>
+          </div>
+          <div class="price-input">
+            <label>1 osoba (2+ nocí):</label>
+            <input type="number" id="single2" readonly>
+            <span>Kč/noc</span>
+          </div>
+          <div class="price-input">
+            <label>Dvoulůžkový (1 noc):</label>
+            <input type="number" id="double1" readonly>
+            <span>Kč/noc</span>
+          </div>
+          <div class="price-input">
+            <label>Dvoulůžkový (2+ nocí):</label>
+            <input type="number" id="double2" readonly>
+            <span>Kč/noc</span>
+          </div>
+          <div class="price-input">
+            <label>Třílůžkový (1 noc):</label>
+            <input type="number" id="triple1" readonly>
+            <span>Kč/noc</span>
+          </div>
+          <div class="price-input">
+            <label>Třílůžkový (2+ nocí):</label>
+            <input type="number" id="triple2" readonly>
+            <span>Kč/noc</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <a href="index.html" class="btn">← Zpět na hlavní stránku</a>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      async function testConnection() {
+        const url = document.getElementById('sheetsUrl').value;
+        const statusDiv = document.getElementById('status');
+        const pricesDiv = document.getElementById('currentPrices');
+        
+        if (!url) {
+          statusDiv.innerHTML = '<div class="status error">Zadejte Google Sheets URL</div>';
+          return;
+        }
+
+        statusDiv.innerHTML = '<div class="status info">Testuji připojení...</div>';
+
+        try {
+          const response = await fetch(url);
+          if (response.ok) {
+            const csv = await response.text();
+            const prices = parseCSV(csv);
+            
+            if (Object.keys(prices).length > 0) {
+              // Zobrazit ceny
+              document.getElementById('single1').value = prices.single1 || 'N/A';
+              document.getElementById('single2').value = prices.single2 || 'N/A';
+              document.getElementById('double1').value = prices.double1 || 'N/A';
+              document.getElementById('double2').value = prices.double2 || 'N/A';
+              document.getElementById('triple1').value = prices.triple1 || 'N/A';
+              document.getElementById('triple2').value = prices.triple2 || 'N/A';
+              
+              pricesDiv.style.display = 'block';
+              statusDiv.innerHTML = '<div class="status success">✅ Připojení úspěšné! Ceny se načítají správně.</div>';
+              
+              // Uložit URL do localStorage pro použití na webu
+              localStorage.setItem('google_sheets_url', url);
+            } else {
+              statusDiv.innerHTML = '<div class="status error">❌ CSV neobsahuje platné ceny. Zkontrolujte strukturu Google Sheets.</div>';
+            }
+          } else {
+            statusDiv.innerHTML = '<div class="status error">❌ Chyba při načítání: ' + response.status + '</div>';
+          }
+        } catch (error) {
+          statusDiv.innerHTML = '<div class="status error">❌ Chyba připojení: ' + error.message + '</div>';
+        }
+      }
+
+      function parseCSV(csv) {
+        const lines = csv.split('\n');
+        const prices = {};
+        
+        lines.forEach(line => {
+          const [key, value] = line.split(',');
+          if (key && value && !isNaN(parseInt(value))) {
+            prices[key.trim()] = parseInt(value.trim());
+          }
+        });
+        
+        return prices;
+      }
+
+      // Načíst uloženou URL při načtení stránky
+      window.addEventListener('load', function() {
+        const savedUrl = localStorage.getItem('google_sheets_url');
+        if (savedUrl) {
+          document.getElementById('sheetsUrl').value = savedUrl;
+        }
+      });
+    </script>
+  </body>
+</html>

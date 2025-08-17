@@ -1,4 +1,4 @@
-// Pricing management system for static hosting
+// Pricing management system for Google Sheets
 (function() {
   'use strict';
 
@@ -12,25 +12,52 @@
     triple2: 1500
   };
 
-  // Get current prices from JSON file or localStorage fallback
+  // Get Google Sheets URL from localStorage or use default
+  function getGoogleSheetsURL() {
+    return localStorage.getItem('google_sheets_url') || 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/pub?output=csv';
+  }
+
+  // Parse CSV data from Google Sheets
+  function parseCSV(csv) {
+    const lines = csv.split('\n');
+    const prices = {};
+    
+    lines.forEach(line => {
+      const [key, value] = line.split(',');
+      if (key && value && !isNaN(parseInt(value))) {
+        prices[key.trim()] = parseInt(value.trim());
+      }
+    });
+    
+    return prices;
+  }
+
+  // Get current prices from Google Sheets or localStorage fallback
   async function getCurrentPrices() {
     try {
-      // Zkusíme načíst z JSON souboru
-      const response = await fetch('/pricing.json');
+      // Zkusíme načíst z Google Sheets
+      const response = await fetch(getGoogleSheetsURL());
       if (response.ok) {
-        const data = await response.json();
+        const csv = await response.text();
+        const prices = parseCSV(csv);
+        
         // Uložíme do localStorage jako cache
-        localStorage.setItem('pricing', JSON.stringify(data));
-        return { ...DEFAULT_PRICES, ...data };
+        localStorage.setItem('pricing', JSON.stringify(prices));
+        localStorage.setItem('pricing_timestamp', Date.now());
+        
+        return { ...DEFAULT_PRICES, ...prices };
       }
     } catch (e) {
-      console.warn('JSON soubor nedostupný, používáme localStorage:', e);
+      console.warn('Google Sheets nedostupné, používáme localStorage:', e);
     }
 
     // Fallback na localStorage
     try {
       const stored = localStorage.getItem('pricing');
-      if (stored) {
+      const timestamp = localStorage.getItem('pricing_timestamp');
+      
+      // Použijeme cache jen pokud není starší než 1 hodina
+      if (stored && timestamp && (Date.now() - timestamp < 3600000)) {
         const prices = JSON.parse(stored);
         return { ...DEFAULT_PRICES, ...prices };
       }
@@ -43,7 +70,7 @@
   // Update price elements on the page
   async function updatePriceElements() {
     const prices = await getCurrentPrices();
-    console.log('💰 Aktuální ceny:', prices);
+    console.log('💰 Aktuální ceny z Google Sheets:', prices);
     
     // Update price elements by data attributes
     const priceElements = document.querySelectorAll('[data-price]');
@@ -114,8 +141,11 @@
 
   // Initialize pricing system
   function initPricing() {
-    console.log('🔄 Inicializuji systém cen...');
+    console.log('🔄 Inicializuji systém cen z Google Sheets...');
     updatePriceElements();
+    
+    // Refresh prices every 5 minutes
+    setInterval(updatePriceElements, 300000);
     
     // Listen for storage changes (if admin updates prices in another tab)
     window.addEventListener('storage', function(e) {
