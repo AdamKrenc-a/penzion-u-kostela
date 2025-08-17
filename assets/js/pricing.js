@@ -1,4 +1,4 @@
-// Pricing management system
+// Pricing management system for static hosting
 (function() {
   'use strict';
 
@@ -12,24 +12,19 @@
     triple2: 1500
   };
 
-  // API base URL
-  const API_BASE = window.location.origin;
-
-  // Get current prices from API or localStorage fallback
+  // Get current prices from JSON file or localStorage fallback
   async function getCurrentPrices() {
     try {
-      // Zkusíme načíst z API
-      const response = await fetch(`${API_BASE}/api/prices`);
+      // Zkusíme načíst z JSON souboru
+      const response = await fetch('/pricing.json');
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          // Uložíme do localStorage jako cache
-          localStorage.setItem('pricing', JSON.stringify(data.prices));
-          return { ...DEFAULT_PRICES, ...data.prices };
-        }
+        // Uložíme do localStorage jako cache
+        localStorage.setItem('pricing', JSON.stringify(data));
+        return { ...DEFAULT_PRICES, ...data };
       }
     } catch (e) {
-      console.warn('API nedostupné, používáme localStorage:', e);
+      console.warn('JSON soubor nedostupný, používáme localStorage:', e);
     }
 
     // Fallback na localStorage
@@ -55,7 +50,7 @@
     priceElements.forEach(element => {
       const priceKey = element.getAttribute('data-price');
       if (prices[priceKey]) {
-        element.textContent = `${prices[priceKey]} Kč/den`;
+        element.textContent = `${prices[priceKey]} Kč/noc`;
       }
     });
 
@@ -64,17 +59,17 @@
     tableCells.forEach(cell => {
       const i18nKey = cell.getAttribute('data-i18n');
       if (i18nKey === 'rooms.table.p1a') {
-        cell.textContent = `${prices.single1} Kč/den`;
+        cell.textContent = `${prices.single1} Kč/noc`;
       } else if (i18nKey === 'rooms.table.p1b') {
-        cell.textContent = `${prices.single2} Kč/den`;
+        cell.textContent = `${prices.single2} Kč/noc`;
       } else if (i18nKey === 'rooms.table.p2a') {
-        cell.textContent = `${prices.double1} Kč/den`;
+        cell.textContent = `${prices.double1} Kč/noc`;
       } else if (i18nKey === 'rooms.table.p2b') {
-        cell.textContent = `${prices.double2} Kč/den`;
+        cell.textContent = `${prices.double2} Kč/noc`;
       } else if (i18nKey === 'rooms.table.p3a') {
-        cell.textContent = `${prices.triple1} Kč/den`;
+        cell.textContent = `${prices.triple1} Kč/noc`;
       } else if (i18nKey === 'rooms.table.p3b') {
-        cell.textContent = `${prices.triple2} Kč/den`;
+        cell.textContent = `${prices.triple2} Kč/noc`;
       }
     });
 
@@ -83,8 +78,8 @@
     allTableCells.forEach(cell => {
       const text = cell.textContent;
       
-      // Check if cell contains price pattern like "800 Kč/den"
-      if (text.includes('Kč/den')) {
+      // Check if cell contains price pattern like "800 Kč/noc"
+      if (text.includes('Kč/noc')) {
         // Find which price this cell should show based on position or content
         const row = cell.closest('tr');
         if (row) {
@@ -95,21 +90,21 @@
           // Determine price type based on row content and cell position
           if (rowText.includes('1 osoba') || rowText.includes('single')) {
             if (cellIndex === 1) { // First price column
-              cell.textContent = `${prices.single1} Kč/den`;
+              cell.textContent = `${prices.single1} Kč/noc`;
             } else if (cellIndex === 2) { // Second price column
-              cell.textContent = `${prices.single2} Kč/den`;
+              cell.textContent = `${prices.single2} Kč/noc`;
             }
           } else if (rowText.includes('dvoulůžkový') || rowText.includes('double')) {
             if (cellIndex === 1) {
-              cell.textContent = `${prices.double1} Kč/den`;
+              cell.textContent = `${prices.double1} Kč/noc`;
             } else if (cellIndex === 2) {
-              cell.textContent = `${prices.double2} Kč/den`;
+              cell.textContent = `${prices.double2} Kč/noc`;
             }
           } else if (rowText.includes('třílůžkový') || rowText.includes('triple')) {
             if (cellIndex === 1) {
-              cell.textContent = `${prices.triple1} Kč/den`;
+              cell.textContent = `${prices.triple1} Kč/noc`;
             } else if (cellIndex === 2) {
-              cell.textContent = `${prices.triple2} Kč/den`;
+              cell.textContent = `${prices.triple2} Kč/noc`;
             }
           }
         }
